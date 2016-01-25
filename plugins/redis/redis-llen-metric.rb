@@ -12,6 +12,13 @@ require 'sensu-plugin/metric/cli'
 require 'redis'
 
 class RedisListLengthMetric < Sensu::Plugin::Metric::CLI::Graphite
+  option :sentinel,
+          short: '-S SENTINELS',
+          long: '--sentinels SENTINELS',
+          description: 'Redis Sentinel to connect to',
+          default: '[{:host => "127.0.0.1", :port => 26379},
+                     {:host => "127.0.0.1", :port => 26380}]
+
   option :host,
          short: '-h HOST',
          long: '--host HOST',
@@ -43,7 +50,11 @@ class RedisListLengthMetric < Sensu::Plugin::Metric::CLI::Graphite
          required: true
 
   def run
-    options = { host: config[:host], port: config[:port] }
+    if :sentinel then
+      options[:sentinels] => SENTINELS
+    else
+      options = { host: config[:host], port: config[:port] }
+    
     options[:password] = config[:password] if config[:password]
     redis = Redis.new(options)
 
